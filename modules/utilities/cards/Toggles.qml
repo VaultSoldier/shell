@@ -32,9 +32,11 @@ StyledRect {
             font.pointSize: Appearance.font.size.normal
         }
 
-        RowLayout {
+        GridLayout {
             Layout.alignment: Qt.AlignHCenter
-            spacing: Appearance.spacing.small
+            columns: (VPN.enabled || NightLight.enabled) ? 4 : 6
+            rowSpacing: Appearance.spacing.small
+            columnSpacing: Appearance.spacing.small
 
             Toggle {
                 icon: "wifi"
@@ -90,6 +92,13 @@ StyledRect {
                 enabled: !VPN.connecting
                 visible: Config.utilities.vpn.provider.some(p => typeof p === "object" ? (p.enabled === true) : false)
                 onClicked: VPN.toggle()
+            }
+
+            Toggle {
+                icon: "dark_mode"
+                checked: NightLight.on
+                visible: NightLight.enabled
+                onClicked: NightLight.toggle()
             }
         }
     }
