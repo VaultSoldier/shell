@@ -174,6 +174,7 @@ StyledRect {
                 SessionButton {
                     icon: Config.session.icons.hibernate
                     command: Config.session.commands.hibernate
+                    fill: 0 // unfilled (outline) icon
                 }
                 SessionButton {
                     icon: Config.session.icons.reboot
