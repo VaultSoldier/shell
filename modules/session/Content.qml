@@ -66,6 +66,7 @@ Column {
 
         icon: Config.session.icons.hibernate
         command: Config.session.commands.hibernate
+        fill: 0 // unfilled (outline) icon
 
         KeyNavigation.up: shutdown
         KeyNavigation.down: reboot

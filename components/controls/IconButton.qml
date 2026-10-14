@@ -9,6 +9,9 @@ ButtonBase {
     property alias icon: label.text
     readonly property alias label: label
 
+    // Icon fill axis override; -1 = automatic (filled, or follows toggle state)
+    property real fill: -1
+
     font: Tokens.font.icon.medium
     padding: type === IconButton.Text ? Tokens.padding.extraSmall / 2 : Tokens.padding.small
 
@@ -41,7 +44,7 @@ ButtonBase {
         anchors.verticalCenterOffset: 1 // AHHHHHHH material symbols whyyyy
         color: root.onColour
         fontStyle: root.font
-        fill: !root.isToggle || root.internalChecked ? 1 : 0
+        fill: root.fill >= 0 ? root.fill : !root.isToggle || root.internalChecked ? 1 : 0
 
         Behavior on fill {
             Anim {
