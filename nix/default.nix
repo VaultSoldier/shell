@@ -26,7 +26,6 @@
   xkeyboard-config,
   cmake,
   ninja,
-  kdePackages,
   pkg-config,
   caelestia-cli,
   m3shapes,
@@ -113,7 +112,7 @@ in
     src = ./..;
 
     nativeBuildInputs = [cmake ninja makeWrapper qt6.wrapQtAppsHook];
-    buildInputs = [qs extras plugin xkeyboard-config qt6.qtbase kdePackages.kirigami];
+    buildInputs = [qs extras plugin xkeyboard-config qt6.qtbase];
     propagatedBuildInputs = runtimeDeps;
 
     cmakeFlags =
@@ -135,7 +134,6 @@ in
     postInstall = ''
       makeWrapper ${qs}/bin/qs $out/bin/caelestia-shell \
         --prefix PATH : "${lib.makeBinPath runtimeDeps}" \
-        --prefix QML_IMPORT_PATH : "${kdePackages.kirigami}/lib" \
         --set FONTCONFIG_FILE "${fontconfig}" \
         --set CAELESTIA_LIB_DIR ${extras}/lib \
         --set CAELESTIA_XKB_RULES_PATH ${xkeyboard-config}/share/xkeyboard-config-2/rules/base.lst \
