@@ -19,8 +19,34 @@ ClipRect {
     readonly property HyprlandMonitor monitor: Hypr.monitorFor(screen)
     readonly property bool onSpecial: monitor?.lastIpcObject.specialWorkspace?.name !== ""
     readonly property int activeWsId: monitor.activeWorkspace?.id ?? 1
-    readonly property int activeWsIdx: workspaceIndex(activeWsId)
     readonly property int shown: Math.max(1, Config.bar.workspaces.shown)
+
+    // split-monitor-workspaces pins a contiguous range of workspace ids per monitor
+    // (1-9, 10-18, 19-27, ...). The stock window math derives the visible slots from the
+    // raw id (groupOffset = floor((activeWsId - 1) / shown) * shown), so on the second
+    // monitor its first workspace (id 10) renders as the last slot of a 5-wide bar and the
+    // window spills over other monitors' ids -- a bar click there jumps monitors.
+    // Anchor the window to this monitor's own lowest id instead.
+    readonly property var monitorWsIds: {
+        return Hypr.workspaces.values
+            .filter(w => w.id > 0 && w.monitor === root.monitor)
+            .map(w => w.id)
+            .sort((a, b) => a - b);
+    };
+
+    readonly property int wsBase: (Config.bar.workspaces.perMonitor && monitorWsIds.length > 0) ? monitorWsIds[0] : 1;
+    readonly property int wsLast: (Config.bar.workspaces.perMonitor && monitorWsIds.length > 0) ? monitorWsIds[monitorWsIds.length - 1] : 1;
+
+    // Declared after wsBase/wsLast: QML initializes property bindings in declaration order.
+    readonly property int groupOffset: {
+        if (!Config.bar.workspaces.showUnoccupied)
+            return 0;
+        // Page inside this monitor's range, clamped so the last page stays inside that
+        // range (a slot may repeat) instead of showing another monitor's workspace.
+        const page = Math.floor(Math.max(0, activeWsId - wsBase) / shown) * shown;
+        const maxOffset = Math.max(0, Math.max(wsLast, wsBase + shown - 1) - wsBase + 1 - shown);
+        return (wsBase - 1) + Math.min(page, maxOffset);
+    }
 
     readonly property var wsIds: {
         if (Config.bar.workspaces.showUnoccupied)
@@ -41,20 +67,22 @@ ClipRect {
         return workspaces.slice(start, end).map(w => w.id);
     }
 
+    // Declared after wsIds/groupOffset for the same reason (declaration-order init).
+    readonly property int activeWsIdx: {
+        if (!Config.bar.workspaces.showUnoccupied)
+            return wsIds.indexOf(activeWsId);
+        return CUtils.clamp(activeWsId - groupOffset - 1, 0, shown - 1);
+    }
+
     readonly property var workspaces: {
         CUtils.dependency(workspaces.itemsDirty);
         return wsIds.map(id => workspaces.itemAtIndex(workspaceIndex(id)));
     }
 
-    // Only relevant for when showUnoccupied is true
-    readonly property int groupOffset: {
-        if (!Config.bar.workspaces.showUnoccupied)
-            return 0;
-        return Math.floor((activeWsId - 1) / shown) * shown;
-    }
-
     property real blur: onSpecial ? 1 : 0
 
+    // Maps a model id (see wsIds / the delegate's groupOffset + index + 1) to its position
+    // in the list; deliberately independent of the active workspace.
     function workspaceIndex(id: int): int {
         if (!Config.bar.workspaces.showUnoccupied)
             return wsIds.indexOf(id);
